@@ -25,8 +25,8 @@ export class GeminiLiveService {
   private onConnectionChange: ((connected: boolean) => void) | null = null;
   private onError: ((error: string) => void) | null = null;
 
-  constructor(apiKey: string) {
-    this.ai = new GoogleGenAI({ apiKey });
+  constructor() {
+    this.ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   }
 
   setCallbacks(

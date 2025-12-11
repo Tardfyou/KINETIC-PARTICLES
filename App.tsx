@@ -9,6 +9,7 @@ const App: React.FC = () => {
   // App State
   const [selectedShape, setSelectedShape] = useState<ShapeType>(DEFAULT_SHAPE);
   const [particleColor, setParticleColor] = useState<string>(DEFAULT_COLOR);
+  const [isAutoColor, setIsAutoColor] = useState<boolean>(false);
   
   // Vision/Gesture State
   const [gestureState, setGestureState] = useState<GestureState>({
@@ -45,6 +46,7 @@ const App: React.FC = () => {
         <Experience 
           shape={selectedShape} 
           color={particleColor} 
+          isAutoColor={isAutoColor}
           handState={gestureState.handState} 
         />
       </div>
@@ -56,6 +58,8 @@ const App: React.FC = () => {
           onShapeSelect={setSelectedShape}
           particleColor={particleColor}
           onColorChange={setParticleColor}
+          isAutoColor={isAutoColor}
+          onAutoColorToggle={setIsAutoColor}
           gestureState={gestureState}
           isConnected={isConnected}
           error={error}

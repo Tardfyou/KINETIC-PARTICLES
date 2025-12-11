@@ -7,10 +7,11 @@ import { PARTICLE_COUNT } from '../../constants';
 interface ParticlesProps {
   shape: ShapeType;
   color: string;
+  isAutoColor: boolean;
   handState: HandState;
 }
 
-export const Particles: React.FC<ParticlesProps> = ({ shape, color, handState }) => {
+export const Particles: React.FC<ParticlesProps> = ({ shape, color, isAutoColor, handState }) => {
   const pointsRef = useRef<THREE.Points>(null);
   
   // Calculate target positions based on shape
@@ -52,16 +53,38 @@ export const Particles: React.FC<ParticlesProps> = ({ shape, color, handState })
         
         case ShapeType.TARDFYOU:
           // Trefoil Knot parametric equation
-          // u goes from 0 to 2PI (or 4PI to close it nicely)
           const tKnot = u * Math.PI * 4;
           const scale = 0.8;
           vec.x = scale * (Math.sin(tKnot) + 2 * Math.sin(2 * tKnot));
           vec.y = scale * (Math.cos(tKnot) - 2 * Math.cos(2 * tKnot));
           vec.z = scale * (-Math.sin(3 * tKnot));
-          // Add some thickness volume
           vec.x += (Math.random() - 0.5) * 0.5;
           vec.y += (Math.random() - 0.5) * 0.5;
           vec.z += (Math.random() - 0.5) * 0.5;
+          return vec;
+
+        case ShapeType.GALAXY:
+          // Spiral Galaxy Generator
+          const arms = 3; // Number of spiral arms
+          const armIndex = i % arms;
+          const randomOffset = Math.pow(Math.random(), 3); // More particles near center
+          const maxR = 5;
+          
+          const radius = randomOffset * maxR;
+          const spinAngle = radius * 2.5; // Twist factor
+          const armAngle = (armIndex / arms) * Math.PI * 2;
+          
+          const totalAngle = armAngle + spinAngle;
+          
+          // Add some randomness to spread the arms
+          const spread = (Math.random() - 0.5) * 0.5 * (radius / 2); // Spread increases with radius
+          
+          vec.x = radius * Math.cos(totalAngle + spread);
+          vec.y = (Math.random() - 0.5) * (2 / (radius + 0.1)); // Flattened disk, thicker at center
+          vec.z = radius * Math.sin(totalAngle + spread);
+          
+          // Add random star dust
+          vec.addScalar((Math.random() - 0.5) * 0.15);
           return vec;
 
         case ShapeType.SPHERE:
@@ -98,12 +121,18 @@ export const Particles: React.FC<ParticlesProps> = ({ shape, color, handState })
 
     const time = state.clock.getElapsedTime();
     const positions = pointsRef.current.geometry.attributes.position.array as Float32Array;
+    const material = pointsRef.current.material as THREE.PointsMaterial;
+
+    // --- Color Logic ---
+    if (isAutoColor) {
+      // Faster color cycle for more energy
+      const hue = (time * 0.2) % 1; 
+      material.color.setHSL(hue, 1.0, 0.6);
+    } else {
+      material.color.set(color);
+    }
     
-    // Determine Global Multiplier based on Hand State
-    // OPEN: Expand/Explode (Multi > 1.0)
-    // CLOSED / PINCH: Contract/Aggregate (Multi < 0.2)
-    // IDLE: Normal (Multi = 1.0)
-    
+    // --- Scale / Gesture Logic ---
     let targetScale = 1.0;
     if (handState === HandState.OPEN) {
         targetScale = 2.5; // Explosion
@@ -111,51 +140,46 @@ export const Particles: React.FC<ParticlesProps> = ({ shape, color, handState })
         targetScale = 0.1; // Implosion / Aggregation
     }
 
-    // Adjust interaction speed/noise based on gesture intensity
     const isInteracting = handState !== HandState.IDLE;
-    const lerpSpeed = isInteracting ? 0.1 : 0.05;
+    const lerpSpeed = isInteracting ? 0.08 : 0.04;
 
     for (let i = 0; i < PARTICLE_COUNT; i++) {
       const i3 = i * 3;
       
-      // Original target position for this shape
       const tx = targetPositions[i3];
       const ty = targetPositions[i3+1];
       const tz = targetPositions[i3+2];
 
-      // Calculate desired position based on state
       let dx = tx * targetScale;
       let dy = ty * targetScale;
       let dz = tz * targetScale;
 
-      // Add "Breathing" noise
-      // If Pinch/Closed, jitter intensely (high energy compression). 
-      // If Open, float loosely.
       const isCompressed = (handState === HandState.CLOSED || handState === HandState.PINCH);
-      const noiseAmp = isCompressed ? 0.02 : 0.1;
-      const noiseFreq = isCompressed ? 15 : 2;
+      
+      const noiseAmp = isCompressed ? 0.05 : 0.15;
+      const noiseFreq = isCompressed ? 20 : 1.5;
       
       dx += Math.sin(time * noiseFreq + randoms[i] * 10) * noiseAmp;
       dy += Math.cos(time * noiseFreq + randoms[i] * 10) * noiseAmp;
       dz += Math.sin(time * noiseFreq + randoms[i] * 10) * noiseAmp;
 
-      // Special effect: Rotation
-      // Rotate the whole cloud slowly
-      const cosT = Math.cos(time * 0.2);
-      const sinT = Math.sin(time * 0.2);
+      // --- Enhanced Rotation / Vortex ---
+      // Significantly increased rotation speeds for the "spectacular" feel
+      const rotSpeed = isCompressed ? 4.0 : 0.5; // Faster idle spin, very fast compression spin
+      const cosT = Math.cos(time * rotSpeed);
+      const sinT = Math.sin(time * rotSpeed);
       
+      // Rotate around Y axis
       const rx = dx * cosT - dz * sinT;
       const rz = dx * sinT + dz * cosT;
       
       dx = rx;
       dz = rz;
 
-      // Interpolate current position towards desired
       currentPositions[i3] += (dx - currentPositions[i3]) * lerpSpeed;
       currentPositions[i3+1] += (dy - currentPositions[i3+1]) * lerpSpeed;
       currentPositions[i3+2] += (dz - currentPositions[i3+2]) * lerpSpeed;
 
-      // Update geometry
       positions[i3] = currentPositions[i3];
       positions[i3+1] = currentPositions[i3+1];
       positions[i3+2] = currentPositions[i3+2];
@@ -175,10 +199,10 @@ export const Particles: React.FC<ParticlesProps> = ({ shape, color, handState })
         />
       </bufferGeometry>
       <pointsMaterial
-        size={0.08}
+        size={0.09} // Slightly larger particles
         color={color}
         transparent
-        opacity={0.8}
+        opacity={0.85}
         sizeAttenuation={true}
         blending={THREE.AdditiveBlending}
         depthWrite={false}

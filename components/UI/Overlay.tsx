@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { ShapeType, HandState, GestureState } from '../../types';
 import { SHAPE_OPTIONS } from '../../constants';
-import { Settings, Maximize, Circle, Box, Disc, Dna, Activity, Wifi, WifiOff, AlertCircle, Sparkles } from 'lucide-react';
+import { Settings, Maximize, Circle, Box, Disc, Dna, Activity, Wifi, WifiOff, AlertCircle, Sparkles, RefreshCcw, Aperture } from 'lucide-react';
 
 interface OverlayProps {
   selectedShape: ShapeType;
   onShapeSelect: (shape: ShapeType) => void;
   particleColor: string;
   onColorChange: (color: string) => void;
+  isAutoColor: boolean;
+  onAutoColorToggle: (active: boolean) => void;
   gestureState: GestureState;
   isConnected: boolean;
   error: string | null;
@@ -20,6 +22,7 @@ const getIcon = (shape: ShapeType) => {
     case ShapeType.TORUS: return <Disc size={20} />;
     case ShapeType.DNA: return <Dna size={20} />;
     case ShapeType.TARDFYOU: return <Sparkles size={20} />;
+    case ShapeType.GALAXY: return <Aperture size={20} />;
     default: return <Circle size={20} />;
   }
 };
@@ -29,6 +32,8 @@ export const Overlay: React.FC<OverlayProps> = ({
   onShapeSelect,
   particleColor,
   onColorChange,
+  isAutoColor,
+  onAutoColorToggle,
   gestureState,
   isConnected,
   error
@@ -116,17 +121,42 @@ export const Overlay: React.FC<OverlayProps> = ({
             </div>
           </div>
 
-          {/* Color Picker */}
+          {/* Color Picker & Auto Mode */}
           <div>
             <label className="text-xs font-mono text-gray-400 mb-3 block uppercase tracking-widest">Particle Aesthetic</label>
-            <div className="flex items-center gap-3 bg-white/5 p-2 rounded-lg border border-white/10">
-              <input 
-                type="color" 
-                value={particleColor}
-                onChange={(e) => onColorChange(e.target.value)}
-                className="w-8 h-8 rounded cursor-pointer bg-transparent border-none outline-none"
-              />
-              <span className="font-mono text-sm text-gray-300">{particleColor.toUpperCase()}</span>
+            <div className="flex flex-col gap-3">
+              
+              {/* Toggle Auto */}
+              <button 
+                onClick={() => onAutoColorToggle(!isAutoColor)}
+                className={`flex items-center justify-between p-2 rounded-lg text-sm transition-all border ${
+                  isAutoColor 
+                    ? 'bg-purple-500/20 border-purple-500/50 text-purple-300' 
+                    : 'bg-white/5 border-transparent text-gray-400 hover:bg-white/10'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <RefreshCcw size={16} className={isAutoColor ? "animate-spin" : ""} />
+                  <span>Auto Cycle Color</span>
+                </div>
+                <div className={`w-8 h-4 rounded-full relative transition-colors ${isAutoColor ? 'bg-purple-500' : 'bg-gray-600'}`}>
+                    <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all ${isAutoColor ? 'left-4.5' : 'left-0.5'}`} style={{left: isAutoColor ? '1.1rem' : '0.1rem'}}/>
+                </div>
+              </button>
+
+              {/* Manual Picker (Disabled if Auto) */}
+              <div className={`flex items-center gap-3 bg-white/5 p-2 rounded-lg border border-white/10 transition-opacity ${isAutoColor ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
+                <input 
+                  type="color" 
+                  value={particleColor}
+                  onChange={(e) => onColorChange(e.target.value)}
+                  className="w-8 h-8 rounded cursor-pointer bg-transparent border-none outline-none"
+                  disabled={isAutoColor}
+                />
+                <span className="font-mono text-sm text-gray-300">
+                  {isAutoColor ? 'AUTO_MODE' : particleColor.toUpperCase()}
+                </span>
+              </div>
             </div>
           </div>
 

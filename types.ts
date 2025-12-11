@@ -1,9 +1,12 @@
+import React from 'react';
+
 export enum ShapeType {
   SPHERE = 'SPHERE',
   CUBE = 'CUBE',
   TORUS = 'TORUS',
   DNA = 'DNA',
-  TARDFYOU = 'TARDFYOU'
+  TARDFYOU = 'TARDFYOU',
+  GALAXY = 'GALAXY'
 }
 
 export enum HandState {
@@ -36,6 +39,8 @@ declare global {
       ambientLight: any;
       pointLight: any;
       color: any;
+      // Index signature to allow any other R3F elements
+      [key: string]: any;
     }
   }
 }

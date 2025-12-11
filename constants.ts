@@ -2,7 +2,7 @@ import { ShapeType } from './types';
 
 export const DEFAULT_SHAPE = ShapeType.SPHERE;
 export const DEFAULT_COLOR = '#00ffff';
-export const PARTICLE_COUNT = 3000;
+export const PARTICLE_COUNT = 4000; // Increased count slightly for better Galaxy density
 export const CAMERA_FOV = 45;
 
 export const SHAPE_OPTIONS = [
@@ -11,6 +11,7 @@ export const SHAPE_OPTIONS = [
   { id: ShapeType.TORUS, label: 'Vortex' },
   { id: ShapeType.DNA, label: 'Helix' },
   { id: ShapeType.TARDFYOU, label: 'Tardfyou' },
+  { id: ShapeType.GALAXY, label: 'Hyper Galaxy' },
 ];
 
 // Gemini System Instruction

@@ -27,13 +27,8 @@ export const CameraHandler: React.FC<CameraHandlerProps> = ({
 
   useEffect(() => {
     // 1. Initialize Gemini Service
-    const apiKey = process.env.API_KEY;
-    if (!apiKey) {
-      onError("Missing API_KEY in environment variables.");
-      return;
-    }
-
-    const service = new GeminiLiveService(apiKey);
+    // API Key is handled internally by GeminiLiveService using process.env.API_KEY
+    const service = new GeminiLiveService();
     service.setCallbacks(
       (stateStr) => {
         // Map string to Enum
